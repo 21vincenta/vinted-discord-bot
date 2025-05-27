@@ -21,7 +21,7 @@ try {
     Logger.info('Continuing without proxies...');
 }
 
-const algorithmSettings = ConfigurationManager.getAlgorithmSetting
+const algorithmSettings = ConfigurationManager.getAlgorithmSetting();  // added missing ()
 CatalogService.initializeConcurrency(algorithmSettings.concurrent_requests);
 
 const getCookie = async () => {
@@ -44,14 +44,12 @@ const refreshCookie = async () => {
             await new Promise(resolve => setTimeout(resolve, 200));
         }
 
-        setTimeout(() => {
-            Logger.debug('Retrying to fetch cookie');
-        }, 1000);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        Logger.debug('Retrying to fetch cookie');
     }
 };
 
-
-const discordConfig = ConfigurationManager.getDiscordConfig
+const discordConfig = ConfigurationManager.getDiscordConfig();  // added missing ()
 const token = discordConfig.token;
 
 Logger.info('Starting Vinted Bot');
@@ -65,13 +63,13 @@ setInterval(async () => {
     } catch (error) {
         Logger.debug('Error refreshing cookie');
     }
-}, 60000);  // 60 seconds
+}, 60000);  // Refresh every 60 seconds
 
 const getCatalogRoots = async (cookie) => {
     let found = false;
     while (!found) {
         try {
-            const roots = await fetchCatalogInitializer( { cookie });
+            const roots = await fetchCatalogInitializer({ cookie });
             if (roots) {
                 buildCategoryMapFromRoots(roots);
                 found = true;
@@ -83,7 +81,7 @@ const getCatalogRoots = async (cookie) => {
             await new Promise(resolve => setTimeout(resolve, 200));
         }
     }
-}
+};
 
 Logger.info('Fetching catalog roots from Vinted');
 
@@ -106,12 +104,10 @@ const sendToChannel = async (item, user, vintedChannel) => {
             [embed, ...photosEmbeds],
             [actionRow]
         );
-    }
-    catch (error) {
+    } catch (error) {
         Logger.debug('Error posting message to channel');
         Logger.debug(error);
     }
-
 };
 
 Logger.info('Fetching monitored channels');
@@ -119,7 +115,6 @@ Logger.info('Fetching monitored channels');
 let allMonitoringChannels = await crud.getAllMonitoredVintedChannels();
 let allMonitoringChannelsBrandMap = await crud.getAllMonitoredVintedChannelsBrandMap();
 
-// Print the number of monitored channels
 Logger.info(`Monitoring ${allMonitoringChannels.length} Vinted channels`);
 
 crud.eventEmitter.on('updated', async () => {
@@ -146,16 +141,16 @@ const monitorChannels = () => {
                 try {
                     const user = brandChannel.user;
                     const matchingItems = filterItemsByUrl(
-                        [item], 
-                        brandChannel.url, 
-                        brandChannel.bannedKeywords, 
+                        [item],
+                        brandChannel.url,
+                        brandChannel.bannedKeywords,
                         brandChannel.preferences.get(Preference.Countries) || []
                     );
 
                     if (matchingItems.length > 0) {
                         sendToChannel(item, user, brandChannel);
                     }
-                } catch(error) {
+                } catch (error) {
                     Logger.debug('Error sending to channel');
                     Logger.debug(error);
                 }
@@ -181,8 +176,8 @@ Logger.info('Starting monitoring channels');
 monitorChannels();
 
 if (discordConfig.channel_inactivity_enabled) {
-    //every 30 minutes
+    // Every 30 minutes
     setInterval(() => {
-        checkVintedChannelInactivity(client)
+        checkVintedChannelInactivity(client);
     }, 1000 * 60 * 30);
 }
